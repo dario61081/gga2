@@ -4,7 +4,7 @@
 
 <p align="center">
   <strong>Provider-agnostic code review using AI</strong><br>
-  Use Claude, Gemini, Codex, OpenCode, Ollama, LM Studio, GitHub Models, or any AI to enforce your coding standards.<br>
+  Use Claude, Gemini, Codex, OpenCode, Antigravity, Ollama, LM Studio, GitHub Models, or any AI to enforce your coding standards.<br>
   Zero dependencies. Pure Bash. Works everywhere.
 </p>
 
@@ -504,6 +504,10 @@ PROVIDER="github:gpt-4o"
 PROVIDER="github:gpt-4.1"
 PROVIDER="github:deepseek-r1"
 PROVIDER="github:grok-3"
+
+# Antigravity / VS Code users: use any provider CLI from your integrated terminal
+# Antigravity comes with Gemini built-in — just set:
+PROVIDER="gemini"
 ```
 
 ---
@@ -804,7 +808,7 @@ git commit -m "feat: add feature"
     ├──▶ 6. Build prompt: rules + file contents
     │
     ├──▶ 7. Send to AI provider (with timeout + progress)
-    │       (claude/gemini/codex/opencode/ollama/lmstudio/github)
+    │       (claude/gemini/codex/opencode/ollama/lmstudio/github/...)
     │
     └──▶ 8. Parse response
             │
@@ -1002,6 +1006,31 @@ Install hooks:
 lefthook install
 ```
 
+### 🖥️ VS Code / Antigravity Integration
+
+GGA works seamlessly with VS Code and [Antigravity](https://antigravity.google) (Google's VS Code-based IDE). Since GGA installs as a standard git hook, it runs automatically when you commit from the Source Control panel or the integrated terminal.
+
+**Setup:**
+
+```bash
+# 1. Open your project in VS Code or Antigravity
+# 2. Open the integrated terminal (Ctrl+`)
+# 3. Initialize and install GGA as usual
+gga init
+gga install
+
+# 4. Make sure your AI provider CLI is available in PATH
+which claude   # or gemini, codex, opencode
+```
+
+That's it. When you commit via the Source Control panel (`Cmd+Enter` / `Ctrl+Enter`) or via `git commit` in the terminal, GGA's pre-commit hook fires and reviews your staged files.
+
+**Tips for VS Code / Antigravity users:**
+
+- **Output visibility**: Hook output appears in the "Git" output channel. Open it via View → Output → select "Git" from the dropdown
+- **Bypass when needed**: Use `--no-verify` from the terminal: `git commit --no-verify -m "wip"`
+- **Antigravity users**: Antigravity includes Gemini built-in. Set `PROVIDER="gemini"` in your `.gga` config and ensure the `gemini` CLI is in your PATH
+
 ### CI/CD Integration
 
 You can also run Gentleman Guardian Angel in your CI pipeline:
@@ -1142,6 +1171,19 @@ GGA_TIMEOUT=600 gga run  # Or via environment variable
 # Review fewer files at once
 EXCLUDE_PATTERNS="*.min.js,*.bundle.js,dist/*"
 ```
+
+### GGA not running from VS Code Source Control panel
+
+If GGA doesn't trigger when committing from VS Code's Source Control UI:
+
+1. Ensure the hook is installed: `ls -la .git/hooks/pre-commit`
+2. Check that `gga` is in your PATH — VS Code may use a different shell profile
+3. Try adding the full path in the hook:
+   ```bash
+   # .git/hooks/pre-commit
+   /opt/homebrew/bin/gga run || exit 1
+   ```
+4. Check the Git output channel (View → Output → Git) for error messages
 
 ### LM Studio connection issues
 
