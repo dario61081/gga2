@@ -83,6 +83,26 @@ cd gga
 ./install.sh
 ```
 
+### Windows (Git Bash)
+
+GGA runs on Windows through [Git Bash](https://gitforwindows.org/) (MINGW64):
+
+```bash
+# Clone and install
+git clone https://github.com/Gentleman-Programming/gentleman-guardian-angel.git
+cd gentleman-guardian-angel
+bash install.sh
+
+# Add to PATH (if not already)
+echo 'export PATH="$HOME/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+
+# Verify
+gga version
+```
+
+> **WSL** is also fully supported — GGA runs natively with no special configuration.
+
 ### Verify Installation
 
 ```bash

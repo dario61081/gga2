@@ -10,7 +10,13 @@
 #   - Config file (.gga) changes
 # ============================================================================
 
-CACHE_DIR="$HOME/.cache/gga"
+if [[ -n "${LOCALAPPDATA:-}" ]]; then
+  CACHE_DIR="${LOCALAPPDATA}/gga/cache"
+elif [[ -n "${XDG_CACHE_HOME:-}" ]]; then
+  CACHE_DIR="${XDG_CACHE_HOME}/gga"
+else
+  CACHE_DIR="$HOME/.cache/gga"
+fi
 
 # ============================================================================
 # Cross-platform Hash Helper

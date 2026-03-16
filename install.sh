@@ -17,6 +17,16 @@ CYAN='\033[0;36m'
 BOLD='\033[1m'
 NC='\033[0m'
 
+# OS detection
+detect_os() {
+  case "$(uname -s)" in
+    Darwin*)          echo "macos" ;;
+    MINGW*|MSYS*|CYGWIN*) echo "windows" ;;
+    *)                echo "linux" ;;
+  esac
+}
+GGA_OS=$(detect_os)
+
 echo ""
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${CYAN}${BOLD}  Gentleman Guardian Angel - Installer${NC}"
@@ -26,7 +36,10 @@ echo ""
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Determine install location
-if [[ -w "/usr/local/bin" ]]; then
+if [[ "$GGA_OS" == "windows" ]]; then
+    INSTALL_DIR="$HOME/bin"
+    mkdir -p "$INSTALL_DIR"
+elif [[ -w "/usr/local/bin" ]]; then
     INSTALL_DIR="/usr/local/bin"
 elif [[ -d "$HOME/.local/bin" && -w "$HOME/.local/bin" ]]; then
     INSTALL_DIR="$HOME/.local/bin"
@@ -56,7 +69,11 @@ if [[ -f "$INSTALL_DIR/gga" ]]; then
 fi
 
 # Create lib directory
-LIB_INSTALL_DIR="$HOME/.local/share/gga/lib"
+if [[ "$GGA_OS" == "windows" ]]; then
+    LIB_INSTALL_DIR="$HOME/bin/lib/gga"
+else
+    LIB_INSTALL_DIR="$HOME/.local/share/gga/lib"
+fi
 mkdir -p "$LIB_INSTALL_DIR"
 
 # Copy files
@@ -66,7 +83,7 @@ cp "$SCRIPT_DIR/lib/cache.sh" "$LIB_INSTALL_DIR/cache.sh"
 cp "$SCRIPT_DIR/lib/pr_mode.sh" "$LIB_INSTALL_DIR/pr_mode.sh"
 
 # Update LIB_DIR path in installed script
-if [[ "$(uname)" == "Darwin" ]]; then
+if [[ "$GGA_OS" == "macos" ]]; then
   sed -i '' "s|LIB_DIR=.*|LIB_DIR=\"$LIB_INSTALL_DIR\"|" "$INSTALL_DIR/gga"
 else
   sed -i "s|LIB_DIR=.*|LIB_DIR=\"$LIB_INSTALL_DIR\"|" "$INSTALL_DIR/gga"
@@ -84,9 +101,15 @@ echo ""
 if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
   echo -e "${YELLOW}⚠️  $INSTALL_DIR is not in your PATH${NC}"
   echo ""
-  echo "Add this line to your ~/.bashrc or ~/.zshrc:"
-  echo ""
-  echo -e "  ${CYAN}export PATH=\"$INSTALL_DIR:\$PATH\"${NC}"
+  if [[ "$GGA_OS" == "windows" ]]; then
+    echo "Add this line to your ~/.bashrc:"
+    echo ""
+    echo -e "  ${CYAN}export PATH=\"\$HOME/bin:\$PATH\"${NC}"
+  else
+    echo "Add this line to your ~/.bashrc or ~/.zshrc:"
+    echo ""
+    echo -e "  ${CYAN}export PATH=\"$INSTALL_DIR:\$PATH\"${NC}"
+  fi
   echo ""
 fi
 

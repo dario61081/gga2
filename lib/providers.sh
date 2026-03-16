@@ -674,9 +674,9 @@ execute_with_timeout() {
   shift 2
 
   local output_file
-  output_file=$(mktemp "${TMPDIR:-/tmp}/gga_timeout_out.XXXXXX")
+  output_file=$(mktemp "${TEMP:-${TMPDIR:-/tmp}}/gga_timeout_out.XXXXXX")
   local exit_code_file
-  exit_code_file=$(mktemp "${TMPDIR:-/tmp}/gga_timeout_ec.XXXXXX")
+  exit_code_file=$(mktemp "${TEMP:-${TMPDIR:-/tmp}}/gga_timeout_ec.XXXXXX")
 
   # Determine if we can use fancy spinner (TTY mode)
   local use_spinner=false

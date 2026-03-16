@@ -16,6 +16,16 @@ CYAN='\033[0;36m'
 BOLD='\033[1m'
 NC='\033[0m'
 
+# OS detection
+detect_os() {
+  case "$(uname -s)" in
+    Darwin*)          echo "macos" ;;
+    MINGW*|MSYS*|CYGWIN*) echo "windows" ;;
+    *)                echo "linux" ;;
+  esac
+}
+GGA_OS=$(detect_os)
+
 echo ""
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${CYAN}${BOLD}  Gentleman Guardian Angel - Uninstaller${NC}"
@@ -26,6 +36,7 @@ echo ""
 LOCATIONS=(
   "/usr/local/bin/gga"
   "$HOME/.local/bin/gga"
+  "$HOME/bin/gga"
 )
 
 FOUND=false
@@ -37,13 +48,14 @@ for loc in "${LOCATIONS[@]}"; do
   fi
 done
 
-# Remove lib directory
-LIB_DIR="$HOME/.local/share/gga"
-if [[ -d "$LIB_DIR" ]]; then
-  rm -rf "$LIB_DIR"
-  echo -e "${GREEN}✅ Removed: $LIB_DIR${NC}"
-  FOUND=true
-fi
+# Check both possible lib locations
+for lib_dir in "$HOME/.local/share/gga" "$HOME/bin/lib/gga"; do
+  if [[ -d "$lib_dir" ]]; then
+    rm -rf "$lib_dir"
+    echo -e "${GREEN}✅ Removed: $lib_dir${NC}"
+    FOUND=true
+  fi
+done
 
 # Remove global config (optional)
 GLOBAL_CONFIG="$HOME/.config/gga"
