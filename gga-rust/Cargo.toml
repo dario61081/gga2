@@ -1,0 +1,72 @@
+[package]
+name = "gga"
+version = "3.0.0"
+edition = "2021"
+description = "Gentleman Guardian Angel - Provider-agnostic code review using AI"
+authors = ["Gentleman Programming"]
+license = "MIT"
+repository = "https://github.com/Gentleman-Programming/gentleman-guardian-angel"
+keywords = ["cli", "code-review", "ai", "git", "pre-commit"]
+categories = ["command-line-utilities", "development-tools"]
+
+[dependencies]
+# CLI argument parsing (SOLID: Single Responsibility)
+clap = { version = "4.5", features = ["derive", "env"] }
+
+# Async runtime (KISS: Simple async with tokio)
+tokio = { version = "1.40", features = ["full"] }
+
+# HTTP client for AI providers
+reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
+
+# JSON serialization/deserialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Git operations (SOC: Separated git concerns)
+git2 = "0.19"
+
+# File hashing for cache
+sha2 = "0.10"
+hex = "0.4"
+
+# Glob pattern matching
+glob = "0.3"
+ignore = "0.4"
+
+# Terminal colors and styling
+colored = "2.1"
+indicatif = "0.17"
+
+# Config file parsing
+toml = "0.8"
+dirs = "5.0"
+url = "2.5"
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Async trait support
+async-trait = "0.1"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[dev-dependencies]
+assert_cmd = "2.0"
+predicates = "3.0"
+tempfile = "3.10"
+mockall = "0.12"
+
+[profile.release]
+opt-level = "z"  # Optimize for size
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"
+
+[profile.dev]
+debug = true
+opt-level = 0
