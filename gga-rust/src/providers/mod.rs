@@ -52,15 +52,15 @@ impl ProviderFactory {
                 anyhow::bail!("OpenCode provider coming soon")
             }
             "ollama" => {
-                let model = model.context("Ollama requires a model (e.g., ollama:llama3.2)")?;
+                let model = model.context("Ollama requiere un modelo (ej: ollama:llama3.2)")?;
                 Ok(Box::new(ollama::OllamaProvider::new(model)))
             }
             "lmstudio" => Ok(Box::new(lmstudio::LMStudioProvider::new(model))),
             "github" => {
-                let model = model.context("GitHub Models requires a model (e.g., github:gpt-4o)")?;
+                let model = model.context("GitHub Models requiere un modelo (ej: github:gpt-4o)")?;
                 Ok(Box::new(github::GitHubModelsProvider::new(model)))
             }
-            _ => anyhow::bail!("Unknown provider: {}", base_provider),
+            _ => anyhow::bail!("Proveedor desconocido: {}", base_provider),
         }
     }
     
@@ -74,7 +74,7 @@ impl ProviderFactory {
     }
 }
 
-/// Execute provider with timeout and progress feedback (KISS: Simple wrapper)
+/// Ejecutar proveedor con timeout y feedback de progreso (KISS: Simple wrapper)
 pub async fn execute_with_timeout(
     provider: &dyn Provider,
     prompt: &str,
@@ -83,31 +83,31 @@ pub async fn execute_with_timeout(
     let duration = Duration::from_secs(timeout_secs);
     let provider_name = provider.name().to_string();
     
-    info!("Sending to {} for review (timeout: {}s)", provider_name, timeout_secs);
+    info!("Enviando a {} para revisión (timeout: {}s)", provider_name, timeout_secs);
     
-    // Create a progress spinner (UX: Better user experience)
+    // Crear spinner de progreso (UX: Mejor experiencia de usuario)
     let spinner = indicatif::ProgressBar::new_spinner();
-    spinner.set_message(format!("Waiting for {} response...", provider_name));
+    spinner.set_message(format!("Esperando respuesta de {}...", provider_name));
     spinner.enable_steady_tick(Duration::from_millis(100));
     
-    // Execute with timeout
+    // Ejecutar con timeout
     let result = timeout(duration, provider.execute(prompt)).await;
     
     spinner.finish_and_clear();
     
     match result {
         Ok(Ok(response)) => {
-            debug!("Provider {} responded successfully", provider_name);
+            debug!("Proveedor {} respondió exitosamente", provider_name);
             Ok(response)
         }
         Ok(Err(e)) => {
-            warn!("Provider {} failed: {}", provider_name, e);
+            warn!("Proveedor {} falló: {}", provider_name, e);
             Err(e)
         }
         Err(_) => {
-            warn!("Provider {} timed out after {}s", provider_name, timeout_secs);
+            warn!("Proveedor {} excedió el timeout de {}s", provider_name, timeout_secs);
             anyhow::bail!(
-                "{}\n\nProvider timed out after {}s.\nTry: Increase TIMEOUT in .gga config",
+                "{}\n\nEl proveedor excedió el timeout de {}s.\nIntenta: Aumentar TIMEOUT en la configuración .gga",
                 "TIMEOUT".red().bold(),
                 timeout_secs
             )
@@ -115,7 +115,7 @@ pub async fn execute_with_timeout(
     }
 }
 
-/// Validate a provider string
+/// Validar una cadena de proveedor
 pub async fn validate_provider(provider_str: &str) -> Result<()> {
     let provider = ProviderFactory::create(provider_str)?;
     provider.validate().await

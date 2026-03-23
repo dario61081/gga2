@@ -198,8 +198,10 @@ impl GitOperations {
             }
         }
 
-        warn!("Could not detect base branch (no main/master/develop found)");
-        anyhow::bail!("Could not detect base branch. Set PR_BASE_BRANCH in .gga config.");
+        warn!("No se pudo detectar la rama base (no se encontró main/master/develop)");
+        anyhow::bail!(
+            "No se pudo detectar la rama base. Establece PR_BASE_BRANCH en la configuración .gga."
+        );
     }
 
     /// Get the diff for a PR range

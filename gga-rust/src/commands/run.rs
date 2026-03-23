@@ -1,73 +1,73 @@
-//! Run command implementation
+//! Implementación del comando run
 //! 
-//! This is the main code review command.
+//! Este es el comando principal de revisión de código.
 
 use anyhow::{Context, Result};
 use colored::Colorize;
-use tracing::{debug, info};
+use tracing::info;
 
 use crate::cache::CacheManager;
 use crate::config::ConfigLoader;
 use crate::git::GitOperations;
 use crate::models::{FileToReview, ReviewContext, ReviewStatus, RunArgs};
 use crate::providers::{self, ProviderFactory};
-use crate::utils::{output, patterns};
+use crate::utils::output;
 
-/// Execute the run command
+/// Ejecutar el comando run
 pub async fn execute_run(args: &RunArgs) -> Result<()> {
     let version = crate::utils::defaults::VERSION;
     output::print_banner(version);
     
-    // Load configuration
+    // Cargar configuración
     let config = ConfigLoader::load()
-        .context("Failed to load configuration")?;
+        .context("Error al cargar la configuración")?;
     
-    // Validate provider is configured
+    // Validar que el proveedor esté configurado
     let provider_str = config.provider
         .as_ref()
-        .context("No provider configured. Run 'gga init' to create config.")?;
+        .context("No hay proveedor configurado. Ejecuta 'gga init' para crear la configuración.")?;
     
-    info!("Using provider: {}", provider_str);
-    output::log_info(format!("Provider: {}", provider_str));
-    output::log_info(format!("Rules file: {}", config.rules_file));
-    output::log_info(format!("File patterns: {}", config.file_patterns));
+    info!("Usando proveedor: {}", provider_str);
+    output::log_info(format!("Proveedor: {}", provider_str));
+    output::log_info(format!("Archivo de reglas: {}", config.rules_file));
+    output::log_info(format!("Patrones de archivos: {}", config.file_patterns));
     
     if !config.exclude_patterns.is_empty() {
-        output::log_info(format!("Exclude patterns: {}", config.exclude_patterns));
+        output::log_info(format!("Patrones de exclusión: {}", config.exclude_patterns));
     }
     
-    // Validate provider is available
+    // Validar que el proveedor esté disponible
     providers::validate_provider(provider_str).await
-        .context("Provider validation failed")?;
+        .context("Validación del proveedor falló")?;
     
-    // Check rules file exists
+    // Verificar que el archivo de reglas existe
     if !std::path::Path::new(&config.rules_file).exists() {
-        output::log_error(format!("Rules file not found: {}", config.rules_file));
+        output::log_error(format!("Archivo de reglas no encontrado: {}", config.rules_file));
         std::process::exit(1);
     }
     
-    // Determine mode and get files
+    // Determinar modo y obtener archivos
     let (files, pr_range) = get_files_to_review(args, &config)?;
     
     if files.is_empty() {
-        output::log_warning("No matching files to review");
+        output::log_warning("No hay archivos coincidentes para revisar");
         println!();
         return Ok(());
     }
     
-    // Initialize cache
+    // Inicializar caché
     let cache = CacheManager::new()?;
     let use_cache = !args.no_cache && !args.ci && !args.pr_mode;
     
     if use_cache {
         if !cache.is_cache_valid(&config.rules_file, ".gga")? {
-            output::log_info("Cache invalidated (rules or config changed)");
+            output::log_info("Caché invalidado (reglas o configuración cambiaron)");
             cache.invalidate()?;
         }
         cache.init_cache(&config.rules_file, ".gga")?;
     }
     
-    // Filter cached files
+    // Filtrar archivos en caché
     let mut files_to_review = Vec::new();
     let mut cached_count = 0;
     
@@ -96,39 +96,39 @@ pub async fn execute_run(args: &RunArgs) -> Result<()> {
     }
     
     if cached_count > 0 {
-        output::log_success(format!("{} file(s) passed from cache", cached_count));
+        output::log_success(format!("{} archivo(s) pasaron del caché", cached_count));
     }
     
     if files_to_review.is_empty() {
-        output::log_success("All files passed from cache!");
+        output::log_success("¡Todos los archivos pasaron del caché!");
         println!();
-        output::log_success("CODE REVIEW PASSED (cached)");
+        output::log_success("REVISIÓN DE CÓDIGO APROBADA (caché)");
         println!();
         return Ok(());
     }
     
-    // Display files to review
-    output::log_section("Files to review:");
+    // Mostrar archivos a revisar
+    output::log_section("Archivos a revisar:");
     for file in &files_to_review {
         println!("  - {}", file.path.display());
     }
     println!();
     
-    // Read rules
+    // Leer reglas
     let rules = std::fs::read_to_string(&config.rules_file)
-        .context("Failed to read rules file")?;
+        .context("Error al leer archivo de reglas")?;
     
-    // Build review context
+    // Construir contexto de revisión
     let context = ReviewContext {
         rules,
         files: files_to_review.clone(),
         commit_message: None,
     };
     
-    // Build prompt
+    // Construir prompt
     let prompt = build_review_prompt(&context, &pr_range)?;
     
-    // Execute review
+    // Ejecutar revisión
     let provider = ProviderFactory::create(provider_str)?;
     let result = providers::execute_with_timeout(
         provider.as_ref(),
@@ -136,43 +136,43 @@ pub async fn execute_run(args: &RunArgs) -> Result<()> {
         config.timeout,
     ).await?;
     
-    // Display result
+    // Mostrar resultado
     println!("{}", result);
     println!();
     
-    // Parse and handle result
-    let status = parse_review_status(&result, config.strict_mode);
+    // Parsear y manejar resultado
+    let status = parse_review_status(&result);
     
     match status {
         ReviewStatus::Passed => {
-            // Cache passed files
+            // Guardar archivos en caché
             if use_cache {
                 for file in &files_to_review {
                     cache.cache_result(file, true)?;
                 }
             }
-            output::log_success("CODE REVIEW PASSED");
+            output::log_success("REVISIÓN DE CÓDIGO APROBADA");
             println!();
             Ok(())
         }
-        ReviewStatus::Failed(msg) => {
-            output::log_error("CODE REVIEW FAILED");
+        ReviewStatus::Failed(_msg) => {
+            output::log_error("REVISIÓN DE CÓDIGO RECHAZADA");
             println!();
-            output::log_info("Fix the violations listed above before committing.");
+            output::log_info("Corrige las violaciones listadas arriba antes de hacer commit.");
             println!();
             std::process::exit(1);
         }
         ReviewStatus::Ambiguous => {
-            output::log_warning("Could not determine review status");
+            output::log_warning("No se pudo determinar el estado de la revisión");
             if config.strict_mode {
-                output::log_error("STRICT MODE: Failing due to ambiguous response");
+                output::log_error("MODO ESTRICTO: Fallando debido a respuesta ambigua");
                 println!();
-                println!("Expected 'STATUS: PASSED' or 'STATUS: FAILED' in response.");
-                println!("Set strict_mode = false in .gga to allow ambiguous responses.");
+                println!("Se esperaba 'STATUS: PASSED' o 'STATUS: FAILED' en la respuesta.");
+                println!("Establece strict_mode = false en .gga para permitir respuestas ambiguas.");
                 println!();
                 std::process::exit(1);
             } else {
-                output::log_warning("Allowing commit (strict_mode = false)");
+                output::log_warning("Permitiendo commit (strict_mode = false)");
                 println!();
                 Ok(())
             }
@@ -180,15 +180,15 @@ pub async fn execute_run(args: &RunArgs) -> Result<()> {
     }
 }
 
-/// Get files to review based on mode
+/// Obtener archivos a revisar según el modo
 fn get_files_to_review(
     args: &RunArgs,
     config: &crate::models::Config,
 ) -> Result<(Vec<std::path::PathBuf>, Option<crate::git::PRRange>)> {
     let files = if args.pr_mode {
-        output::log_info("Mode: PR (full file review)");
+        output::log_info("Modo: PR (revisión completa de archivos)");
         let range = GitOperations::get_pr_range(config.pr_base_branch.as_deref())?;
-        output::log_info(format!("PR range: {}", range.range_string));
+        output::log_info(format!("Rango PR: {}", range.range_string));
         let files = GitOperations::get_pr_files(
             &range,
             &config.file_patterns,
@@ -196,7 +196,7 @@ fn get_files_to_review(
         )?;
         (files, Some(range))
     } else if args.ci {
-        output::log_info("Mode: CI (reviewing last commit)");
+        output::log_info("Modo: CI (revisando último commit)");
         let files = GitOperations::get_ci_files(
             &config.file_patterns,
             &config.exclude_patterns,
@@ -213,7 +213,7 @@ fn get_files_to_review(
     Ok(files)
 }
 
-/// Build review prompt
+/// Construir prompt de revisión
 fn build_review_prompt(
     context: &ReviewContext,
     pr_range: &Option<crate::git::PRRange>,
@@ -222,37 +222,37 @@ fn build_review_prompt(
     
     if let Some(range) = pr_range {
         prompt.push_str(&format!(
-            "You are a code reviewer analyzing a pull request against the {} branch.\n\n",
+            "Eres un revisor de código analizando un pull request contra la rama {}.\n\n",
             range.base
         ));
     } else {
-        prompt.push_str("You are a code reviewer. Analyze the files below and validate they comply with the coding standards provided.\n\n");
+        prompt.push_str("Eres un revisor de código. Analiza los archivos a continuación y valida que cumplan con los estándares de codificación proporcionados.\n\n");
     }
     
-    prompt.push_str("=== CODING STANDARDS ===\n");
+    prompt.push_str("=== ESTÁNDARES DE CODIFICACIÓN ===\n");
     prompt.push_str(&context.rules);
-    prompt.push_str("\n=== END CODING STANDARDS ===\n\n");
+    prompt.push_str("\n=== FIN DE ESTÁNDARES DE CODIFICACIÓN ===\n\n");
     
-    prompt.push_str("=== FILES TO REVIEW ===\n");
+    prompt.push_str("=== ARCHIVOS A REVISAR ===\n");
     
     for file in &context.files {
-        prompt.push_str(&format!("\n--- FILE: {} ---\n", file.path.display()));
+        prompt.push_str(&format!("\n--- ARCHIVO: {} ---\n", file.path.display()));
         prompt.push_str(&file.content);
     }
     
-    prompt.push_str("\n=== END FILES ===\n\n");
+    prompt.push_str("\n=== FIN DE ARCHIVOS ===\n\n");
     
-    prompt.push_str("**IMPORTANT: Your response MUST include one of these lines near the beginning:**\n");
+    prompt.push_str("**IMPORTANTE: Tu respuesta DEBE incluir una de estas líneas cerca del inicio:**\n");
     prompt.push_str("STATUS: PASSED\n");
     prompt.push_str("STATUS: FAILED\n\n");
-    prompt.push_str("**Begin with STATUS:**\n");
+    prompt.push_str("**Comienza con STATUS:**\n");
     
     Ok(prompt)
 }
 
-/// Parse review status from response
-fn parse_review_status(result: &str, _strict: bool) -> ReviewStatus {
-    // Check first 15 lines for STATUS
+/// Parsear estado de revisión desde la respuesta
+fn parse_review_status(result: &str) -> ReviewStatus {
+    // Verificar primeras 15 líneas por STATUS
     let header: String = result
         .lines()
         .take(15)

@@ -190,7 +190,7 @@ impl CacheManager {
         }
     }
 
-    /// Cache a file's review result
+    /// Guardar resultado de revisión de un archivo
     pub fn cache_result(&self, file: &FileToReview, passed: bool) -> Result<()> {
         let project_cache_dir = match self.get_project_cache_dir()? {
             Some(dir) => dir,
@@ -198,39 +198,40 @@ impl CacheManager {
         };
 
         let files_dir = project_cache_dir.join("files");
-        std::fs::create_dir_all(&files_dir).context("Failed to create cache directory")?;
+        std::fs::create_dir_all(&files_dir).context("Error al crear directorio de caché")?;
 
         let cache_file = files_dir.join(&file.hash);
         let status = if passed { "PASSED" } else { "FAILED" };
 
-        std::fs::write(cache_file, status).context("Failed to write cache file")?;
+        std::fs::write(cache_file, status).context("Error al escribir archivo de caché")?;
 
         Ok(())
     }
 
-    /// Initialize cache with current metadata
+    /// Inicializar caché con metadatos actuales
     pub fn init_cache(&self, rules_file: &str, config_file: &str) -> Result<PathBuf> {
         let project_cache_dir = self
             .get_project_cache_dir()?
-            .context("Not in a git repository")?;
+            .context("No estás en un repositorio git")?;
 
-        std::fs::create_dir_all(&project_cache_dir).context("Failed to create cache directory")?;
+        std::fs::create_dir_all(&project_cache_dir)
+            .context("Error al crear directorio de caché")?;
 
         let metadata_hash = self.compute_metadata_hash(rules_file, config_file)?;
         std::fs::write(project_cache_dir.join("metadata"), metadata_hash)
-            .context("Failed to write cache metadata")?;
+            .context("Error al escribir metadatos de caché")?;
 
-        info!("Cache initialized at {:?}", project_cache_dir);
+        info!("Caché inicializado en {:?}", project_cache_dir);
         Ok(project_cache_dir)
     }
 
-    /// Invalidate (delete) project cache
+    /// Invalidar (eliminar) caché del proyecto
     pub fn invalidate(&self) -> Result<()> {
         if let Some(project_cache_dir) = self.get_project_cache_dir()? {
             if project_cache_dir.exists() {
                 std::fs::remove_dir_all(&project_cache_dir)
-                    .context("Failed to remove cache directory")?;
-                info!("Cache invalidated");
+                    .context("Error al eliminar directorio de caché")?;
+                info!("Caché invalidado");
             }
         }
         Ok(())

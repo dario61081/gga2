@@ -5,31 +5,30 @@ use anyhow::{Context, Result};
 use crate::config::ConfigLoader;
 use crate::utils::output;
 
-/// Execute the init command
+/// Ejecutar el comando init
 pub fn execute_init() -> Result<()> {
     output::print_banner(crate::utils::defaults::VERSION);
 
     let config_path = std::path::Path::new(".gga");
 
     if config_path.exists() {
-        output::log_warning("Config file already exists: .gga");
-
-        // In a real implementation, we'd prompt for confirmation
-        // For now, just inform the user
-        output::log_info("Overwrite? Delete .gga and run 'gga init' again to recreate.");
+        output::log_warning("El archivo de configuración ya existe: .gga");
+        output::log_info(
+            "¿Sobrescribir? Elimina .gga y ejecuta 'gga init' de nuevo para recrearlo.",
+        );
         println!();
         return Ok(());
     }
 
     ConfigLoader::create_sample_config()?;
 
-    output::log_success("Created config file: .gga");
+    output::log_success("Archivo de configuración creado: .gga");
     println!();
 
-    output::log_info("Next steps:");
-    println!("  1. Edit .gga to set your preferred provider");
-    println!("  2. Create AGENTS.md with your coding standards");
-    println!("  3. Run: gga install");
+    output::log_info("Siguientes pasos:");
+    println!("  1. Edita .gga para configurar tu proveedor preferido");
+    println!("  2. Crea AGENTS.md con tus estándares de codificación");
+    println!("  3. Ejecuta: gga install");
     println!();
 
     Ok(())

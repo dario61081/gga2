@@ -8,7 +8,7 @@ use crate::config::ConfigLoader;
 use crate::models::CacheAction;
 use crate::utils::output;
 
-/// Execute the cache command
+/// Ejecutar el comando cache
 pub fn execute_cache(action: &CacheAction) -> Result<()> {
     output::print_banner(crate::utils::defaults::VERSION);
 
@@ -23,23 +23,26 @@ pub fn execute_cache(action: &CacheAction) -> Result<()> {
                 ".gga",
             )?;
 
-            output::log_section("Cache Status:");
+            output::log_section("Estado del caché:");
             println!();
 
             match cache.get_project_cache_dir() {
                 Ok(Some(dir)) => {
-                    println!("  Cache directory: {}", dir.display().to_string().cyan());
+                    println!(
+                        "  Directorio de caché: {}",
+                        dir.display().to_string().cyan()
+                    );
 
                     if cache.is_cache_valid(&config.rules_file, ".gga")? {
-                        println!("  Cache validity: {}", "Valid".green());
+                        println!("  Validez del caché: {}", "Válido".green());
                     } else {
                         println!(
-                            "  Cache validity: {}",
-                            "Invalid (rules or config changed)".yellow()
+                            "  Validez del caché: {}",
+                            "Inválido (reglas o configuración cambiaron)".yellow()
                         );
                     }
 
-                    // Count cached files
+                    // Contar archivos en caché
                     let files_dir = dir.join("files");
                     let cached_count = if files_dir.exists() {
                         std::fs::read_dir(&files_dir)
@@ -48,16 +51,16 @@ pub fn execute_cache(action: &CacheAction) -> Result<()> {
                     } else {
                         0
                     };
-                    println!("  Cached files: {}", cached_count.to_string().cyan());
+                    println!("  Archivos en caché: {}", cached_count.to_string().cyan());
 
-                    // Show cache size
+                    // Mostrar tamaño del caché
                     let size = get_dir_size(&dir)?;
-                    println!("  Cache size: {}", format_bytes(size).cyan());
+                    println!("  Tamaño del caché: {}", format_bytes(size).cyan());
                 }
                 _ => {
                     println!(
-                        "  Project cache: {}",
-                        "Not initialized (not in a git repo?)".yellow()
+                        "  Caché del proyecto: {}",
+                        "No inicializado (¿no estás en un repo git?)".yellow()
                     );
                 }
             }
@@ -65,12 +68,12 @@ pub fn execute_cache(action: &CacheAction) -> Result<()> {
         }
         CacheAction::Clear => {
             cache.invalidate()?;
-            output::log_success("Cleared cache for current project");
+            output::log_success("Caché del proyecto limpiado");
             println!();
         }
         CacheAction::ClearAll => {
             cache.clear_all()?;
-            output::log_success("Cleared all cache data");
+            output::log_success("Todos los datos de caché limpiados");
             println!();
         }
     }
@@ -78,7 +81,7 @@ pub fn execute_cache(action: &CacheAction) -> Result<()> {
     Ok(())
 }
 
-/// Get directory size
+/// Obtener tamaño del directorio
 fn get_dir_size(path: &std::path::Path) -> Result<u64> {
     let mut size = 0;
 

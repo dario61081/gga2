@@ -11,7 +11,7 @@ use std::path::PathBuf;
 #[command(
     name = "gga",
     version,
-    about = "Gentleman Guardian Angel - Provider-agnostic code review using AI",
+    about = "Gentleman Guardian Angel - Revisión de código usando IA",
     long_about = None,
     propagate_version = true
 )]
@@ -23,22 +23,22 @@ pub struct Cli {
 /// Available commands (SOLID: Open/Closed principle - easy to extend)
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Run code review on staged files
+    /// Ejecutar revisión de código en archivos staged
     Run(RunArgs),
 
-    /// Install git hooks
+    /// Instalar hooks de git
     Install(InstallArgs),
 
-    /// Uninstall git hooks
+    /// Desinstalar hooks de git
     Uninstall,
 
-    /// Show current configuration
+    /// Mostrar configuración actual
     Config,
 
-    /// Create a sample .gga config file
+    /// Crear archivo de configuración .gga de ejemplo
     Init,
 
-    /// Manage cache
+    /// Gestionar caché
     Cache {
         #[command(subcommand)]
         action: CacheAction,
@@ -48,32 +48,32 @@ pub enum Commands {
 /// Cache subcommands
 #[derive(Subcommand)]
 pub enum CacheAction {
-    /// Show cache status
+    /// Mostrar estado del caché
     Status,
 
-    /// Clear project cache
+    /// Limpiar caché del proyecto
     Clear,
 
-    /// Clear all cached data
+    /// Limpiar todo el caché
     ClearAll,
 }
 
 /// Arguments for the `run` command
 #[derive(Args, Clone)]
 pub struct RunArgs {
-    /// Force review all files, ignoring cache
+    /// Forzar revisión de todos los archivos, ignorando caché
     #[arg(long)]
     pub no_cache: bool,
 
-    /// CI mode: review files changed in last commit
+    /// Modo CI: revisar archivos cambiados en el último commit
     #[arg(long)]
     pub ci: bool,
 
-    /// PR mode: review all files changed in the PR
+    /// Modo PR: revisar todos los archivos cambiados en el PR
     #[arg(long = "pr-mode")]
     pub pr_mode: bool,
 
-    /// With --pr-mode: send only diffs (faster, cheaper)
+    /// Con --pr-mode: enviar solo diffs (más rápido, más barato)
     #[arg(long = "diff-only")]
     pub diff_only: bool,
 }
@@ -81,7 +81,7 @@ pub struct RunArgs {
 /// Arguments for the `install` command
 #[derive(Args, Clone)]
 pub struct InstallArgs {
-    /// Install commit-msg hook instead of pre-commit
+    /// Instalar hook commit-msg en lugar de pre-commit
     #[arg(long = "commit-msg")]
     pub commit_msg: bool,
 }

@@ -47,11 +47,22 @@ impl OllamaProvider {
     
     /// Validate OLLAMA_HOST format (security: Prevent injection)
     fn validate_host(host: &str) -> Result<()> {
+        // Block dangerous characters that could indicate command injection
+        let dangerous_chars = [';', '|', '&', '`', '$', '(', ')', '<', '>'];
+        if host.chars().any(|c| dangerous_chars.contains(&c)) {
+            anyhow::bail!("OLLAMA_HOST contains invalid characters");
+        }
+        
         let url = url::Url::parse(host)
             .context("Invalid OLLAMA_HOST format")?;
         
         if url.scheme() != "http" && url.scheme() != "https" {
             anyhow::bail!("OLLAMA_HOST must use http or https scheme");
+        }
+        
+        // Ensure host has a valid domain
+        if url.host().is_none() {
+            anyhow::bail!("OLLAMA_HOST must have a valid hostname");
         }
         
         Ok(())
@@ -153,9 +164,23 @@ mod tests {
     
     #[test]
     fn test_validate_host() {
+        // Valid hosts
         assert!(OllamaProvider::validate_host("http://localhost:11434").is_ok());
         assert!(OllamaProvider::validate_host("https://ollama.example.com").is_ok());
+        assert!(OllamaProvider::validate_host("http://192.168.1.100:11434").is_ok());
+        
+        // Invalid schemes
         assert!(OllamaProvider::validate_host("ftp://invalid").is_err());
+        assert!(OllamaProvider::validate_host("ssh://localhost").is_err());
+        
+        // Command injection attempts (should be blocked)
         assert!(OllamaProvider::validate_host("http://localhost:11434/;rm -rf").is_err());
+        assert!(OllamaProvider::validate_host("http://localhost:11434|cat /etc/passwd").is_err());
+        assert!(OllamaProvider::validate_host("http://localhost:11434&whoami").is_err());
+        assert!(OllamaProvider::validate_host("http://localhost:11434`id`").is_err());
+        assert!(OllamaProvider::validate_host("http://localhost:11434$(whoami)").is_err());
+        
+        // Invalid URLs
+        assert!(OllamaProvider::validate_host("not a url").is_err());
     }
 }

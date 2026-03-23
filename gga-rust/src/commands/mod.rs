@@ -16,29 +16,29 @@ pub use cache::execute_cache;
 
 use anyhow::Result;
 
-/// Execute the uninstall command
+/// Ejecutar el comando uninstall
 pub fn execute_uninstall() -> Result<()> {
     use crate::git::GitOperations;
     use crate::utils::output;
     
     output::print_banner(crate::utils::defaults::VERSION);
     
-    // Check if we're in a git repo
+    // Verificar que estamos en un repo git
     if git2::Repository::open_from_env().is_err() {
-        output::log_error("Not a git repository");
+        output::log_error("No es un repositorio git");
         std::process::exit(1);
     }
     
-    // Uninstall pre-commit hook
+    // Desinstalar hook pre-commit
     match GitOperations::uninstall_hook("pre-commit") {
-        Ok(_) => output::log_success("Uninstalled pre-commit hook"),
-        Err(e) => output::log_warning(format!("Failed to uninstall pre-commit: {}", e)),
+        Ok(_) => output::log_success("Hook pre-commit desinstalado"),
+        Err(e) => output::log_warning(format!("Error al desinstalar pre-commit: {}", e)),
     }
     
-    // Uninstall commit-msg hook
+    // Desinstalar hook commit-msg
     match GitOperations::uninstall_hook("commit-msg") {
-        Ok(_) => output::log_success("Uninstalled commit-msg hook"),
-        Err(e) => output::log_warning(format!("Failed to uninstall commit-msg: {}", e)),
+        Ok(_) => output::log_success("Hook commit-msg desinstalado"),
+        Err(e) => output::log_warning(format!("Error al desinstalar commit-msg: {}", e)),
     }
     
     println!();

@@ -12,7 +12,7 @@ pub mod output {
         println!();
         println!("{}", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".cyan());
         println!("{} {}", "  Gentleman Guardian Angel".cyan().bold(), format!("v{}", version).cyan());
-        println!("{}", "  Provider-agnostic code review using AI".cyan());
+        println!("{}", "  Revisión de código usando IA".cyan());
         println!("{}", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".cyan());
         println!();
     }
