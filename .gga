@@ -1,0 +1,34 @@
+# Gentleman Guardian Angel Configuration
+# https://github.com/Gentleman-Programming/gentleman-guardian-angel
+
+# AI Provider (required)
+# Options: claude, gemini, codex, opencode, ollama:<model>, lmstudio[:model], github:<model>
+# Examples:
+#   provider = "claude"
+#   provider = "ollama:llama3.2"
+#   provider = "github:gpt-4o"
+provider = "claude"
+
+# File patterns to include in review (comma-separated)
+# Default: "*" (all files)
+# Example: "*.ts,*.tsx,*.js,*.jsx"
+file_patterns = "*.ts,*.tsx,*.js,*.jsx"
+
+# File patterns to exclude from review (comma-separated)
+# Example: "*.test.ts,*.spec.ts"
+exclude_patterns = "*.test.ts,*.spec.ts,*.d.ts"
+
+# File containing code review rules
+# Default: "AGENTS.md"
+rules_file = "AGENTS.md"
+
+# Strict mode: fail if AI response is ambiguous
+# Default: true
+strict_mode = true
+
+# Timeout in seconds for AI provider response
+# Default: 300 (5 minutes)
+timeout = 300
+
+# Base branch for --pr-mode (auto-detects main/master/develop if empty)
+# pr_base_branch = "main"
