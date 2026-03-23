@@ -9,11 +9,17 @@ echo.
 
 set "FOUND=false"
 
-REM Check for gga.cmd
+REM Check for gga.cmd and gga.bat
 set "GGACMD=%USERPROFILE%\bin\gga.cmd"
+set "GGABAT=%USERPROFILE%\bin\gga.bat"
 if exist "%GGACMD%" (
     del "%GGACMD%"
     echo Removed: %GGACMD%
+    set "FOUND=true"
+)
+if exist "%GGABAT%" (
+    del "%GGABAT%"
+    echo Removed: %GGABAT%
     set "FOUND=true"
 )
 

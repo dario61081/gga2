@@ -31,10 +31,13 @@ if exist "C:\Program Files\Git\usr\bin\bash.exe" (
     set "BASH_PATH=bash"
 )
 
+REM Create both .cmd and .bat for maximum compatibility
 (
     echo @echo off
     echo "%BASH_PATH%" "%LIB_INSTALL_DIR%\gga.sh" %%*
 ) > "%INSTALL_DIR%\gga.cmd"
+
+copy "%INSTALL_DIR%\gga.cmd" "%INSTALL_DIR%\gga.bat" /y >nul
 
 echo.
 echo Installation complete!
