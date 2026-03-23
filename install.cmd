@@ -23,9 +23,17 @@ set "BASH_LIB_DIR=%LIB_INSTALL_DIR:\=/%"
 powershell -Command "(Get-Content '%LIB_INSTALL_DIR%\gga.sh') -replace 'LIB_DIR=.*', 'LIB_DIR=\"%BASH_LIB_DIR%\"' | Set-Content '%LIB_INSTALL_DIR%\gga.sh'"
 
 echo Creating wrapper...
+REM Find Git Bash path (prefer Git Bash over WSL)
+set "BASH_PATH="
+if exist "C:\Program Files\Git\usr\bin\bash.exe" (
+    set "BASH_PATH=C:\Program Files\Git\usr\bin\bash.exe"
+) else (
+    set "BASH_PATH=bash"
+)
+
 (
     echo @echo off
-    echo bash "%LIB_INSTALL_DIR%\gga.sh" %%*
+    echo "%BASH_PATH%" "%LIB_INSTALL_DIR%\gga.sh" %%*
 ) > "%INSTALL_DIR%\gga.cmd"
 
 echo.
